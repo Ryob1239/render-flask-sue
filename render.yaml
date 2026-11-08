@@ -1,8 +1,6 @@
 services:
   - type: web
-    name: flask-api
-    runtime: python
+    name: render-flask-sue
+    env: docker
+    region: ohio
     plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
-    autoDeployTrigger: commit

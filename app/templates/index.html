@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado del Despliegue</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .entorno {
+            color: #0078D4;
+            font-size: 1.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+        .imagen-plataforma {
+            max-width: 250px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        .imagen-plataforma:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>¡Despliegue Completado!</h1>
+        <p>La aplicación está ejecutándose de forma independiente en:</p>
+        
+        <div class="entorno">{{ entorno }}</div>
+        
+        <!-- Aquí cargamos dinámicamente la imagen de la plataforma -->
+        <img class="imagen-plataforma" 
+             src="{{ url_for('static', filename='images/' + imagen) }}" 
+             alt="Logo de {{ entorno }}">
+    </div>
+</body>
+</html>
