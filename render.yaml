@@ -1,6 +1,10 @@
+# Blueprint para servicios nuevos creados desde Render Blueprints.
+# Si el servicio ya existe, revisar Settings > Build & Deploy > Start Command.
 services:
   - type: web
     name: render-flask-sue
-    env: docker
+    runtime: python
     region: ohio
     plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.app:app --bind 0.0.0.0:$PORT

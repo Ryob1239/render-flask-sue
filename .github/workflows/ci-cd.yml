@@ -98,6 +98,7 @@ jobs:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID || secrets.RAILWAY_PROJECT_ID }}
       RAILWAY_SERVICE_ID: ${{ vars.RAILWAY_SERVICE_ID || secrets.RAILWAY_SERVICE_ID }}
+      RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
     steps:
       - name: Clonar repositorio
         uses: actions/checkout@v4
@@ -113,7 +114,12 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Iniciar despliegue
-        run: railway up --project "$RAILWAY_PROJECT_ID" --service "$RAILWAY_SERVICE_ID" --environment production --ci
+        # Sin --ci: esperar al resultado final del despliegue y no solo al build.
+        run: |
+          if ! railway up --project "$RAILWAY_PROJECT_ID" --service "$RAILWAY_SERVICE_ID" --environment "${RAILWAY_ENVIRONMENT:-production}"; then
+            echo '::error::Railway no pudo desplegar. Si dice "Service not found", revisa que RAILWAY_SERVICE_ID pertenezca al proyecto RAILWAY_PROJECT_ID y al entorno del token RAILWAY_TOKEN.'
+            exit 1
+          fi
 
   despliegue_azure:
     name: Desplegar en Azure App Service

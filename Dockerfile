@@ -1,15 +1,16 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /workspace
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY app/ ./app/
+COPY application.py ./application.py
 
-# Variable inyectada para identificar el entorno Docker
+# Identifica que la aplicación se ejecuta dentro de una imagen Docker.
 ENV DOCKER_ENV=true
 
+# Railway usa PORT cuando lo define, de lo contrario el contenedor usa 5000.
 EXPOSE 5000
-
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app.app:app"]
+CMD ["sh", "-c", "exec gunicorn --bind 0.0.0.0:${PORT:-5000} app.app:app"]
