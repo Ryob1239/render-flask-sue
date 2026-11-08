@@ -26,7 +26,7 @@ jobs:
       - name: Ejecutar Pytest
         env:
           PYTHONPATH: .
-        run: pytest tests/
+        run: pytest test/
 
   despliegue_docker:
     name: Empaquetar en Docker Hub
