@@ -20,3 +20,6 @@ def test_index_content_local(client):
     assert "¡Despliegue Completado!" in html
     assert "Entorno Local" in html
     assert "local.png" in html
+
+def test_error_intencional():
+    assert 1 == 2, "ERROR: Prueba fallida intencionalmente"
