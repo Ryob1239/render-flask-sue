@@ -77,7 +77,18 @@ jobs:
             echo '::error::Falta el secret RENDER_DEPLOY_HOOK'
             exit 1
           fi
-          curl --fail-with-body --silent --show-error --max-time 30 "$RENDER_DEPLOY_HOOK"
+          http_code=$(curl --silent --show-error --max-time 30 --output /tmp/render-deploy-response.json --write-out '%{http_code}' "$RENDER_DEPLOY_HOOK") || {
+            echo '::error::No se pudo contactar con Render.'
+            exit 1
+          }
+          if [ "$http_code" = "409" ]; then
+            echo '::error::Render responde 409: el servicio está suspendido o el workspace no permite iniciar despliegues. Reactiva el servicio en Render y revisa límites/facturación.'
+            exit 1
+          elif [ "$http_code" != "200" ] && [ "$http_code" != "202" ]; then
+            echo "::error::Render respondió HTTP $http_code. Revisa el Deploy Hook y el estado del servicio."
+            exit 1
+          fi
+          echo "Render aceptó la solicitud de despliegue (HTTP $http_code). Comprueba que el despliegue termine en Render."
 
   despliegue_railway:
     name: Desplegar en Railway
@@ -85,8 +96,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID }}
-      RAILWAY_SERVICE_ID: ${{ vars.RAILWAY_SERVICE_ID }}
+      RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID || secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_SERVICE_ID: ${{ vars.RAILWAY_SERVICE_ID || secrets.RAILWAY_SERVICE_ID }}
     steps:
       - name: Clonar repositorio
         uses: actions/checkout@v4
@@ -94,7 +105,7 @@ jobs:
       - name: Comprobar configuración de Railway
         run: |
           if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_PROJECT_ID" ] || [ -z "$RAILWAY_SERVICE_ID" ]; then
-            echo '::error::Configura RAILWAY_TOKEN (Secret), RAILWAY_PROJECT_ID y RAILWAY_SERVICE_ID (Variables)'
+            echo '::error::Configura RAILWAY_TOKEN, RAILWAY_PROJECT_ID y RAILWAY_SERVICE_ID como Secrets o Variables según corresponda'
             exit 1
           fi
 
@@ -114,11 +125,11 @@ jobs:
 
       - name: Verificar configuración de Azure
         env:
-          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+          AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || secrets.AZURE_WEBAPP_NAME }}
           AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         run: |
           if [ -z "$AZURE_WEBAPP_NAME" ]; then
-            echo '::error::Falta la variable AZURE_WEBAPP_NAME (valor: dcazure)'
+            echo '::error::Falta AZURE_WEBAPP_NAME en Secrets o Variables (valor esperado: dcazure)'
             exit 1
           fi
           if [ -z "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
@@ -134,6 +145,6 @@ jobs:
       - name: Publicar código en Azure App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          app-name: ${{ vars.AZURE_WEBAPP_NAME || secrets.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: azure-package.zip
